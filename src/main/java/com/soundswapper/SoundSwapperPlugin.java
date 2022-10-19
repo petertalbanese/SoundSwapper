@@ -27,8 +27,8 @@ import java.util.HashMap;
 	enabledByDefault = false,
 	description = "Allows the user to replace any sound named in the wiki sounds list: https://oldschool.runescape.wiki/w/List_of_in-game_sound_IDs\n" +
 			"\n" +
-			"To replace a sound, add its name to the list in the plugin menu, then place a .wav file with the same name in your root\n" +
-			"RuneLite folder. The plugin will grab the sound and use it instead!"
+			"To replace a sound, add its name to the list in the plugin menu, then place a .wav file with the same name in the \n" +
+			"SoundSwapper folder in your root RuneLite folder. The plugin will grab the sound and use it instead!"
 )
 public class SoundSwapperPlugin extends Plugin
 {
@@ -39,6 +39,8 @@ public class SoundSwapperPlugin extends Plugin
 	private SoundSwapperConfig config;
 
 	private Clip clip;
+
+	private static final File SOUND_DIR = new File(RuneLite.RUNELITE_DIR, "SoundSwapper");
 
 	private static final SoundIds soundIds = new SoundIds();
 	private Map<Integer, String> soundList = new HashMap<Integer, String>();
@@ -52,6 +54,7 @@ public class SoundSwapperPlugin extends Plugin
 	@Override
 	protected void startUp() throws Exception
 	{
+		SOUND_DIR.mkdir();
 		updateList();
 	}
 
@@ -88,7 +91,7 @@ public class SoundSwapperPlugin extends Plugin
 	}
 
 	private synchronized void playCustomSound(String sound_name) {
-		File sound_file = new File(RuneLite.RUNELITE_DIR, sound_name);
+		File sound_file = new File(SOUND_DIR, sound_name);
 		try {
 			if (clip != null) {
 				clip.close();
