@@ -1,10 +1,9 @@
 package com.soundswapper;
 
 import java.util.HashMap;
-import java.util.Map;
 
 public class SoundIds {
-    public static Map<String, Integer> soundIds1 = new HashMap<String, Integer>() {{
+    public static HashMap<String, Integer> soundIds1 = new HashMap<String, Integer>() {{
         put("eyeglo_battle_fighting_1", 0);
         put("eyeglo_aspidistra", 1);
         put("eyeglo_battle_gnomes_scared", 2);
@@ -2508,7 +2507,7 @@ public class SoundIds {
         put("hacksword_slash", 2500);
     }};
 
-    public static Map<String, Integer> soundIds2 = new HashMap<String, Integer>() {{
+    public static HashMap<String, Integer> soundIds2 = new HashMap<String, Integer>() {{
         put("hacksword_stab", 2501);
         put("2H_crush", 2502);
         put("2H_slash", 2503);
