@@ -18,17 +18,18 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.util.Text;
 
 import java.io.*;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 @Slf4j
 @PluginDescriptor(
-	name = "Sound Swapper",
-	enabledByDefault = false,
-	description = "Allows the user to replace any sound named in the wiki sounds list: https://oldschool.runescape.wiki/w/List_of_in-game_sound_IDs\n" +
-			"\n" +
-			"To replace a sound, add its name to the list in the plugin menu, then place a .wav file with the same name in the \n" +
-			"SoundSwapper folder in your root RuneLite folder. The plugin will grab the sound and use it instead!"
+		name = "Sound Swapper",
+		enabledByDefault = false,
+		description = "Allows the user to replace any sound effect.\n" +
+				"\n" +
+				"To replace a sound, add its ID to the list in the plugin menu, then place a .wav file with the same name in your root\n" +
+				"RuneLite folder. The plugin will grab the sound and use it instead!"
 )
 public class SoundSwapperPlugin extends Plugin
 {
@@ -42,8 +43,8 @@ public class SoundSwapperPlugin extends Plugin
 
 	private static final File SOUND_DIR = new File(RuneLite.RUNELITE_DIR, "SoundSwapper");
 
-	private static final SoundIds soundIds = new SoundIds();
-	private Map<Integer, String> soundList = new HashMap<Integer, String>();
+	private static final int NUM_SOUNDS = 10000;
+	private ArrayList<Boolean> soundList = new ArrayList<Boolean>(Arrays.asList(new Boolean[NUM_SOUNDS]));
 
 	@Provides
 	SoundSwapperConfig provideConfig(ConfigManager configManager)
@@ -67,27 +68,42 @@ public class SoundSwapperPlugin extends Plugin
 	@VisibleForTesting
 	void updateList()
 	{
-		soundList.clear();
+		Collections.fill(soundList, false);
 		for (String s : Text.fromCSV(config.customSounds()))
 		{
-			// I had to split soundIds into 2 pieces because it was too large
-			Integer id = soundIds.soundIds1.get(s);
-			if (id == null) {
-				id = soundIds.soundIds2.get(s);
-			}
-			if (id != null) {
-				soundList.put(id, s);
+			if (isInteger(s)) {
+				int id = Integer.parseInt(s);
+				if (id < NUM_SOUNDS) {
+					soundList.set(id, true);
+				}
 			}
 		}
 	}
 
 	@Subscribe
 	public void onSoundEffectPlayed(SoundEffectPlayed event) {
-		String sound_name = soundList.get(event.getSoundId());
-		if (sound_name != null) {
+		boolean swap = soundList.get(event.getSoundId());
+		if (swap) {
 			event.consume();
-			playCustomSound(sound_name + ".wav");
+			playCustomSound(Integer.toString(event.getSoundId()) + ".wav");
 		}
+	}
+
+	private static boolean isInteger(String str) {
+		if (str == null) {
+			return false;
+		}
+		int length = str.length();
+		if (length == 0) {
+			return false;
+		}
+		for (int i = 0; i < length; i++) {
+			char c = str.charAt(i);
+			if (c < '0' || c > '9') {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private synchronized void playCustomSound(String sound_name) {
