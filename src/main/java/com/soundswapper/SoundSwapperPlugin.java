@@ -18,9 +18,8 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.util.Text;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.nio.file.Files;
+import java.util.*;
 
 @Slf4j
 @PluginDescriptor(
@@ -43,8 +42,7 @@ public class SoundSwapperPlugin extends Plugin
 
 	private static final File SOUND_DIR = new File(RuneLite.RUNELITE_DIR, "SoundSwapper");
 
-	private static final int NUM_SOUNDS = 10000;
-	private ArrayList<Boolean> soundList = new ArrayList<Boolean>(Arrays.asList(new Boolean[NUM_SOUNDS]));
+	private final ArrayList<Integer> soundList = new ArrayList<>();
 
 	@Provides
 	SoundSwapperConfig provideConfig(ConfigManager configManager)
@@ -53,7 +51,7 @@ public class SoundSwapperPlugin extends Plugin
 	}
 
 	@Override
-	protected void startUp() throws Exception
+	protected void startUp()
 	{
 		SOUND_DIR.mkdir();
 		updateList();
@@ -65,49 +63,35 @@ public class SoundSwapperPlugin extends Plugin
 		updateList();
 	}
 
+	//Updates soundList from runelite plugin config
 	@VisibleForTesting
 	void updateList()
 	{
-		Collections.fill(soundList, false);
+		//clears soundList
+		soundList.clear();
 		for (String s : Text.fromCSV(config.customSounds()))
 		{
-			if (isInteger(s)) {
+			try {
 				int id = Integer.parseInt(s);
-				if (id < NUM_SOUNDS) {
-					soundList.set(id, true);
-				}
+				soundList.add(id);
+			} catch (NumberFormatException e) {
+				log.warn("Invalid sound ID: {}", s);
 			}
 		}
 	}
 
 	@Subscribe
 	public void onSoundEffectPlayed(SoundEffectPlayed event) {
-		boolean swap = soundList.get(event.getSoundId());
-		if (swap) {
+		int eventSound = event.getSoundId();
+		if (soundList.contains(eventSound)) {
 			event.consume();
-			playCustomSound(Integer.toString(event.getSoundId()) + ".wav");
+			playCustomSound(eventSound + ".wav");
 		}
-	}
-
-	private static boolean isInteger(String str) {
-		if (str == null) {
-			return false;
-		}
-		int length = str.length();
-		if (length == 0) {
-			return false;
-		}
-		for (int i = 0; i < length; i++) {
-			char c = str.charAt(i);
-			if (c < '0' || c > '9') {
-				return false;
-			}
-		}
-		return true;
 	}
 
 	private synchronized void playCustomSound(String sound_name) {
 		File sound_file = new File(SOUND_DIR, sound_name);
+
 		try {
 			if (clip != null) {
 				clip.close();
@@ -122,7 +106,6 @@ public class SoundSwapperPlugin extends Plugin
 			clip.loop(0);
 		} catch (LineUnavailableException e) {
 			log.warn("Unable to play custom sound " + sound_name, e);
-			return;
 		}
 	}
 
@@ -130,7 +113,8 @@ public class SoundSwapperPlugin extends Plugin
 	{
 		if (sound_file.exists())
 		{
-			try (InputStream fileStream = new BufferedInputStream(new FileInputStream(sound_file));
+
+			try (InputStream fileStream = Files.newInputStream(sound_file.toPath());
 				 AudioInputStream sound = AudioSystem.getAudioInputStream(fileStream))
 			{
 				clip.open(sound);
@@ -143,7 +127,7 @@ public class SoundSwapperPlugin extends Plugin
 		}
 
 		// Otherwise load from the classpath
-		try (InputStream fileStream = new BufferedInputStream(Notifier.class.getResourceAsStream(sound_name));
+		try (InputStream fileStream = Notifier.class.getResourceAsStream(sound_name);
 			 AudioInputStream sound = AudioSystem.getAudioInputStream(fileStream))
 		{
 			clip.open(sound);
