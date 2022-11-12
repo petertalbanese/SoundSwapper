@@ -85,13 +85,12 @@ public class SoundSwapperPlugin extends Plugin {
             for (Integer id : ids) {
                 Clip clip = clips.get(id);
                 if (clip == null || !clip.isOpen()) {
-                    try {
-                        File file = new File(SOUND_DIR, id + ".wav");
+                    File file = new File(SOUND_DIR, id + ".wav");
+                    try (AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(file) ){
                         if (!file.exists()) {
                             log.warn("File {} does not exist", file);
                             return;
                         }
-                        AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(file);
                         clip = AudioSystem.getClip();
                         clip.open(audioInputStream);
                         clips.put(id, clip);
