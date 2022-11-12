@@ -2,13 +2,9 @@ package com.soundswapper;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Provides;
-import javax.inject.Inject;
-import javax.sound.sampled.*;
-
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.events.SoundEffectPlayed;
-import net.runelite.client.Notifier;
 import net.runelite.client.RuneLite;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -17,126 +13,104 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.util.Text;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.util.*;
+import javax.inject.Inject;
+import javax.sound.sampled.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @PluginDescriptor(
-		name = "Sound Swapper",
-		enabledByDefault = false,
-		description = "Allows the user to replace any sound effect.\n" +
-				"\n" +
-				"To replace a sound, add its ID to the list in the plugin menu, then place a .wav file with the same name in your root\n" +
-				"RuneLite folder. The plugin will grab the sound and use it instead!"
+        name = "Sound Swapper",
+        enabledByDefault = false,
+        description = "Allows the user to replace any sound effect.\n" +
+                "\n" +
+                "To replace a sound, add its ID to the list in the plugin menu, then place a .wav file with the same name in your root\n" +
+                "RuneLite folder. The plugin will grab the sound and use it instead!"
 )
-public class SoundSwapperPlugin extends Plugin
-{
-	@Inject
-	private Client client;
+public class SoundSwapperPlugin extends Plugin {
+    @Inject
+    private Client client;
 
-	@Inject
-	private SoundSwapperConfig config;
+    @Inject
+    private SoundSwapperConfig config;
 
-	private Clip clip;
+    private final HashMap<Integer, Clip> clips = new HashMap<>();
+    private static final File SOUND_DIR = new File(RuneLite.RUNELITE_DIR, "SoundSwapper");
 
-	private static final File SOUND_DIR = new File(RuneLite.RUNELITE_DIR, "SoundSwapper");
+    @Provides
+    SoundSwapperConfig provideConfig(ConfigManager configManager) {
+        return configManager.getConfig(SoundSwapperConfig.class);
+    }
 
-	private final ArrayList<Integer> soundList = new ArrayList<>();
+    @Override
+    protected void startUp() {
+        SOUND_DIR.mkdir();
+        updateList();
+    }
 
-	@Provides
-	SoundSwapperConfig provideConfig(ConfigManager configManager)
-	{
-		return configManager.getConfig(SoundSwapperConfig.class);
-	}
+    @Subscribe
+    public void onConfigChanged(ConfigChanged event) {
+        updateList();
+    }
 
-	@Override
-	protected void startUp()
-	{
-		SOUND_DIR.mkdir();
-		updateList();
-	}
+    //Updates soundList from runelite plugin config
+    @VisibleForTesting
+    void updateList() {
+        //Creates intlist from config ids
+        List<Integer> ids = Text.fromCSV(config.customSounds()).stream()
+                .map(Integer::parseInt)
+                .collect(Collectors.toList());
 
-	@Subscribe
-	public void onConfigChanged(ConfigChanged event)
-	{
-		updateList();
-	}
+        //Removes all clips that are not in the list and closes them
+        for (Integer id : ids) {
+            Clip clip = clips.get(id);
+            if (!clips.containsKey(id)) {
+                //closes removed clip
+                clip.close();
+                //'Clip' used without 'try'-with-resources statement
+                //removes clip from map
+                clips.remove(id);
+            }
+        }
+        //Loads all clips which are in the config if they arent loaded yet
+        loadClips(ids);
+    }
 
-	//Updates soundList from runelite plugin config
-	@VisibleForTesting
-	void updateList()
-	{
-		//clears soundList
-		soundList.clear();
-		for (String s : Text.fromCSV(config.customSounds()))
-		{
-			try {
-				int id = Integer.parseInt(s);
-				soundList.add(id);
-			} catch (NumberFormatException e) {
-				log.warn("Invalid sound ID: {}", s);
-			}
-		}
-	}
+    private void loadClips(List<Integer> ids) {
+        //Loads all clips to the map
+        Thread sounds = new Thread(() -> {
+            for (Integer id : ids) {
+                Clip clip = clips.get(id);
+                if (clip == null || !clip.isOpen()) {
+                    try {
+                        File file = new File(SOUND_DIR, id + ".wav");
+                        if (!file.exists()) {
+                            log.warn("File {} does not exist", file);
+                            return;
+                        }
+                        AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(file);
+                        clip = AudioSystem.getClip();
+                        clip.open(audioInputStream);
+                        clips.put(id, clip);
+                    } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+                        log.warn("Error loading sound {}", id, e);
+                    }
+                }
+            }
+        });
+        sounds.start();
+    }
 
-	@Subscribe
-	public void onSoundEffectPlayed(SoundEffectPlayed event) {
-		int eventSound = event.getSoundId();
-		if (soundList.contains(eventSound)) {
-			event.consume();
-			playCustomSound(eventSound + ".wav");
-		}
-	}
-
-	private synchronized void playCustomSound(String sound_name) {
-		File sound_file = new File(SOUND_DIR, sound_name);
-
-		try {
-			if (clip != null) {
-				clip.close();
-			}
-
-			clip = AudioSystem.getClip();
-
-			if (!tryLoadSound(sound_name, sound_file)) {
-				return;
-			}
-
-			clip.loop(0);
-		} catch (LineUnavailableException e) {
-			log.warn("Unable to play custom sound " + sound_name, e);
-		}
-	}
-
-	private boolean tryLoadSound(String sound_name, File sound_file)
-	{
-		if (sound_file.exists())
-		{
-
-			try (InputStream fileStream = Files.newInputStream(sound_file.toPath());
-				 AudioInputStream sound = AudioSystem.getAudioInputStream(fileStream))
-			{
-				clip.open(sound);
-				return true;
-			}
-			catch (UnsupportedAudioFileException | IOException | LineUnavailableException e)
-			{
-				log.warn("Unable to load custom sound " + sound_name, e);
-			}
-		}
-
-		// Otherwise load from the classpath
-		try (InputStream fileStream = Notifier.class.getResourceAsStream(sound_name);
-			 AudioInputStream sound = AudioSystem.getAudioInputStream(fileStream))
-		{
-			clip.open(sound);
-			return true;
-		}
-		catch (UnsupportedAudioFileException | IOException | LineUnavailableException e)
-		{
-			log.warn("Unable to load custom sound " + sound_name, e);
-		}
-		return false;
-	}
+    @Subscribe
+    public void onSoundEffectPlayed(SoundEffectPlayed event) {
+        int eventSound = event.getSoundId();
+        Clip clip = clips.get(eventSound);
+        if (clip != null && clip.isOpen()) {
+            event.consume();
+            clip.loop(0);
+        }
+    }
 }
