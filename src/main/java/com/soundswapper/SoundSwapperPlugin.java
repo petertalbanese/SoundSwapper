@@ -7,6 +7,7 @@ import javax.sound.sampled.*;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.events.AreaSoundEffectPlayed;
 import net.runelite.api.events.SoundEffectPlayed;
 import net.runelite.client.Notifier;
 import net.runelite.client.RuneLite;
@@ -19,8 +20,6 @@ import net.runelite.client.util.Text;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 
 @Slf4j
 @PluginDescriptor(
@@ -43,8 +42,7 @@ public class SoundSwapperPlugin extends Plugin
 
 	private static final File SOUND_DIR = new File(RuneLite.RUNELITE_DIR, "SoundSwapper");
 
-	private static final int NUM_SOUNDS = 10000;
-	private ArrayList<Boolean> soundList = new ArrayList<Boolean>(Arrays.asList(new Boolean[NUM_SOUNDS]));
+	private final ArrayList<Integer> soundList = new ArrayList();
 
 	@Provides
 	SoundSwapperConfig provideConfig(ConfigManager configManager)
@@ -68,42 +66,37 @@ public class SoundSwapperPlugin extends Plugin
 	@VisibleForTesting
 	void updateList()
 	{
-		Collections.fill(soundList, false);
-		for (String s : Text.fromCSV(config.customSounds()))
-		{
-			if (isInteger(s)) {
+		soundList.clear();
+		for (String s : Text.fromCSV(config.customSounds())) {
+			try {
 				int id = Integer.parseInt(s);
-				if (id < NUM_SOUNDS) {
-					soundList.set(id, true);
-				}
+				soundList.add(id);
+			} catch (NumberFormatException e) {
+				log.warn("Invalid sound ID: {}", s);
 			}
 		}
 	}
 
 	@Subscribe
 	public void onSoundEffectPlayed(SoundEffectPlayed event) {
-		boolean swap = soundList.get(event.getSoundId());
-		if (swap) {
-			event.consume();
-			playCustomSound(Integer.toString(event.getSoundId()) + ".wav");
+		if (config.soundEffects()) {
+			int eventSound = event.getSoundId();
+			if (soundList.contains(eventSound)) {
+				event.consume();
+				playCustomSound(eventSound + ".wav");
+			}
 		}
 	}
 
-	private static boolean isInteger(String str) {
-		if (str == null) {
-			return false;
-		}
-		int length = str.length();
-		if (length == 0) {
-			return false;
-		}
-		for (int i = 0; i < length; i++) {
-			char c = str.charAt(i);
-			if (c < '0' || c > '9') {
-				return false;
+	@Subscribe
+	public void onAreaSoundEffectPlayed(AreaSoundEffectPlayed event) {
+		if (config.areaSoundEffects()) {
+			int eventSound = event.getSoundId();
+			if (soundList.contains(eventSound)) {
+				event.consume();
+				playCustomSound(eventSound + ".wav");
 			}
 		}
-		return true;
 	}
 
 	private synchronized void playCustomSound(String sound_name) {
