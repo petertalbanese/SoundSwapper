@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.events.AreaSoundEffectPlayed;
 import net.runelite.api.events.SoundEffectPlayed;
-import net.runelite.client.Notifier;
 import net.runelite.client.RuneLite;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -19,7 +18,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.util.Text;
 
 import java.io.*;
-import java.util.ArrayList;
+import java.util.HashMap;
 
 @Slf4j
 @PluginDescriptor(
@@ -38,11 +37,9 @@ public class SoundSwapperPlugin extends Plugin
 	@Inject
 	private SoundSwapperConfig config;
 
-	private Clip clip;
+	private HashMap<Integer, Clip> clips = new HashMap<Integer, Clip>();
 
 	private static final File SOUND_DIR = new File(RuneLite.RUNELITE_DIR, "SoundSwapper");
-
-	private final ArrayList<Integer> soundList = new ArrayList();
 
 	@Provides
 	SoundSwapperConfig provideConfig(ConfigManager configManager)
@@ -66,11 +63,19 @@ public class SoundSwapperPlugin extends Plugin
 	@VisibleForTesting
 	void updateList()
 	{
-		soundList.clear();
+		for (int sound : clips.keySet()) {
+			Clip clip = clips.get(sound);
+			if (clip != null) {
+				if (clip.isOpen()) {
+					clip.close();
+				}
+			}
+		}
+		clips.clear();
 		for (String s : Text.fromCSV(config.customSounds())) {
 			try {
 				int id = Integer.parseInt(s);
-				soundList.add(id);
+				tryLoadSound(s, id);
 			} catch (NumberFormatException e) {
 				log.warn("Invalid sound ID: {}", s);
 			}
@@ -78,74 +83,56 @@ public class SoundSwapperPlugin extends Plugin
 	}
 
 	@Subscribe
-	public void onSoundEffectPlayed(SoundEffectPlayed event) {
+	public void onSoundEffectPlayed(SoundEffectPlayed event)
+	{
 		if (config.soundEffects()) {
 			int eventSound = event.getSoundId();
-			if (soundList.contains(eventSound)) {
+			if (clips.containsKey(eventSound)) {
 				event.consume();
-				playCustomSound(eventSound + ".wav");
+				playCustomSound(eventSound);
 			}
 		}
 	}
 
 	@Subscribe
-	public void onAreaSoundEffectPlayed(AreaSoundEffectPlayed event) {
+	public void onAreaSoundEffectPlayed(AreaSoundEffectPlayed event)
+	{
 		if (config.areaSoundEffects()) {
 			int eventSound = event.getSoundId();
-			if (soundList.contains(eventSound)) {
+			if (clips.containsKey(eventSound)) {
 				event.consume();
-				playCustomSound(eventSound + ".wav");
+				playCustomSound(eventSound);
 			}
 		}
 	}
 
-	private synchronized void playCustomSound(String sound_name) {
-		File sound_file = new File(SOUND_DIR, sound_name);
-		try {
-			if (clip != null) {
-				clip.close();
-			}
-
-			clip = AudioSystem.getClip();
-
-			if (!tryLoadSound(sound_name, sound_file)) {
-				return;
-			}
-
-			clip.loop(0);
-		} catch (LineUnavailableException e) {
-			log.warn("Unable to play custom sound " + sound_name, e);
-			return;
-		}
-	}
-
-	private boolean tryLoadSound(String sound_name, File sound_file)
+	private boolean tryLoadSound(String sound_name, Integer sound_id)
 	{
-		if (sound_file.exists())
-		{
-			try (InputStream fileStream = new BufferedInputStream(new FileInputStream(sound_file));
-				 AudioInputStream sound = AudioSystem.getAudioInputStream(fileStream))
-			{
+		File sound_file = new File(SOUND_DIR, sound_name + ".wav");
+		if (sound_file.exists()) {
+			try {
+				InputStream fileStream = new BufferedInputStream(new FileInputStream(sound_file));
+				AudioInputStream sound = AudioSystem.getAudioInputStream(fileStream);
+				Clip clip = AudioSystem.getClip();
 				clip.open(sound);
+				clips.put(sound_id, clip);
 				return true;
-			}
-			catch (UnsupportedAudioFileException | IOException | LineUnavailableException e)
-			{
+			} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
 				log.warn("Unable to load custom sound " + sound_name, e);
 			}
 		}
 
-		// Otherwise load from the classpath
-		try (InputStream fileStream = new BufferedInputStream(Notifier.class.getResourceAsStream(sound_name));
-			 AudioInputStream sound = AudioSystem.getAudioInputStream(fileStream))
-		{
-			clip.open(sound);
-			return true;
-		}
-		catch (UnsupportedAudioFileException | IOException | LineUnavailableException e)
-		{
-			log.warn("Unable to load custom sound " + sound_name, e);
-		}
 		return false;
+	}
+
+	private synchronized void playCustomSound(Integer sound_id)
+	{
+		Clip clip = clips.get(sound_id);
+		if (clip == null) {
+			return;
+		}
+
+		clip.setFramePosition(0);
+		clip.start();
 	}
 }
