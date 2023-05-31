@@ -41,6 +41,8 @@ public class SoundSwapperPlugin extends Plugin
 
 	private static final File SOUND_DIR = new File(RuneLite.RUNELITE_DIR, "SoundSwapper");
 
+	private static final String CONFIG_GROUP = "soundswapper";
+
 	@Provides
 	SoundSwapperConfig provideConfig(ConfigManager configManager)
 	{
@@ -57,6 +59,10 @@ public class SoundSwapperPlugin extends Plugin
 	@Subscribe
 	public void onConfigChanged(ConfigChanged event)
 	{
+		if (!CONFIG_GROUP.equals(event.getGroup())) {
+			return;
+		}
+
 		updateList();
 	}
 
