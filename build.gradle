@@ -30,4 +30,4 @@ sourceCompatibility = "1.11"
 tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
 }
-targetCompatibility = JavaVersion.VERSION_1_9
+targetCompatibility = JavaVersion.VERSION_11
