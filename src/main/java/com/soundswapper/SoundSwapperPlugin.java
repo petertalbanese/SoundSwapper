@@ -315,7 +315,7 @@ public class SoundSwapperPlugin extends Plugin
 	{
 		if (configText == null || configText.isEmpty())
 		{
-			return null;
+			return List.of();
 		}
 
 		List<Integer> ids = new ArrayList<>();
