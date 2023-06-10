@@ -51,9 +51,8 @@ import java.util.List;
 @PluginDescriptor(
 		name = "Sound Swapper",
 		enabledByDefault = false,
-		description = "Allows the user to replace any sound effect.\n" +
-				"\n" +
-				"To replace a sound, add its ID to the list in the plugin menu, then place a .wav file with the same name in your root\n" +
+		description = "Allows the user to replace any sound effect.<br><br>" +
+				"To replace a sound, add its ID to the list in the plugin menu, then place a .wav file with the same name in your root<br>" +
 				"RuneLite folder. The plugin will grab the sound and use it instead!"
 )
 public class SoundSwapperPlugin extends Plugin
@@ -213,7 +212,16 @@ public class SoundSwapperPlugin extends Plugin
 			if (soundClips.containsKey(soundId))
 			{
 				event.consume();
-				playCustomSound(soundClips.get(soundId));
+
+				if (config.allowSimultaneousSounds())
+				{
+					Sound.play(soundId);
+				}
+				else
+				{
+					playCustomSound(soundClips.get(soundId));
+				}
+
 				return;
 			}
 		}
@@ -241,7 +249,16 @@ public class SoundSwapperPlugin extends Plugin
 			if (areaSoundClips.containsKey(soundId))
 			{
 				event.consume();
-				playCustomSound(areaSoundClips.get(soundId));
+
+				if (config.allowSimultaneousSounds())
+				{
+					Sound.play(soundId);
+				}
+				else
+				{
+					playCustomSound(areaSoundClips.get(soundId));
+				}
+
 				return;
 			}
 		}

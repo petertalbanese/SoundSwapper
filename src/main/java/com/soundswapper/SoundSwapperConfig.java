@@ -39,16 +39,14 @@ public interface SoundSwapperConfig extends Config
 	@ConfigSection(
 			name = "Sound Effects",
 			description = "Configuration settings for Sound Effects",
-			position = 1,
-			closedByDefault = true
+			position = 1
 	)
 	String SOUND_EFFECTS_SECTION = "soundEffects";
 
 	@ConfigSection(
 			name = "Area Sound Effects",
 			description = "Configuration settings for Area Sound Effects",
-			position = 2,
-			closedByDefault = true
+			position = 2
 	)
 	String AREA_SOUND_EFFECTS_SECTION = "areaSoundEffects";
 
@@ -67,7 +65,8 @@ public interface SoundSwapperConfig extends Config
 	@ConfigItem(
 			keyName = "customSounds",
 			name = "Custom Sounds",
-			description = "Area Sounds to replace with your own custom .wav files. Separate with comma. Sound List: https://oldschool.runescape.wiki/w/List_of_in-game_sound_IDs",
+			description = "Area Sounds to replace with your own custom .wav files. Separate with comma.<br>" +
+					"Sound List: https://oldschool.runescape.wiki/w/List_of_in-game_sound_IDs",
 			position = 2,
 			section = SOUND_EFFECTS_SECTION
 	)
@@ -88,7 +87,7 @@ public interface SoundSwapperConfig extends Config
 	@ConfigItem(
 			keyName = "whitelistSounds",
 			name = "Whitelist Sounds",
-			description = "Sound ids allowed to bypass the 'Consume Sound Effects' config option\n" +
+			description = "Sound ids allowed to bypass the 'Consume Sound Effects' config option<br>" +
 					"Format: 123,456,789",
 			position = 4,
 			section = SOUND_EFFECTS_SECTION
@@ -101,7 +100,7 @@ public interface SoundSwapperConfig extends Config
 	@ConfigItem(
 			keyName = "blacklistedSounds",
 			name = "Blacklist Sounds",
-			description = "Sound ids consumed regardless of the 'Consume Sound Effects' config option being enabled\n" +
+			description = "Sound ids consumed regardless of the 'Consume Sound Effects' config option being enabled<br>" +
 					"Format: 123,456,789",
 			position = 5,
 			section = SOUND_EFFECTS_SECTION
@@ -123,7 +122,8 @@ public interface SoundSwapperConfig extends Config
 	@ConfigItem(
 			keyName = "customAreaSounds",
 			name = "Custom Area Sounds",
-			description = "Area Sounds to replace with your own custom .wav files. Separate with comma. Sound List: https://oldschool.runescape.wiki/w/List_of_in-game_sound_IDs",
+			description = "Area Sounds to replace with your own custom .wav files. Separate with comma.<br>" +
+					"Sound List: https://oldschool.runescape.wiki/w/List_of_in-game_sound_IDs",
 			position = 2,
 			section = AREA_SOUND_EFFECTS_SECTION
 	)
@@ -135,7 +135,7 @@ public interface SoundSwapperConfig extends Config
 	@ConfigItem(
 			keyName = "consumeAreaSounds",
 			name = "Consume Area Sounds",
-			description = "Consume any area sound effect that is not custom\n" +
+			description = "Consume any area sound effect that is not custom<br>" +
 					"(Must have a custom sound file in the folder to allow this to work)",
 			position = 3,
 			section = AREA_SOUND_EFFECTS_SECTION
@@ -145,7 +145,7 @@ public interface SoundSwapperConfig extends Config
 	@ConfigItem(
 			keyName = "whitelistAreaSounds",
 			name = "Whitelist Area Sounds",
-			description = "Sound ids allowed to bypass the 'Consume Area Sound Effects' config option\n" +
+			description = "Sound ids allowed to bypass the 'Consume Area Sound Effects' config option<br>" +
 					"Format: 123,456,789",
 			position = 4,
 			section = AREA_SOUND_EFFECTS_SECTION
@@ -158,7 +158,7 @@ public interface SoundSwapperConfig extends Config
 	@ConfigItem(
 			keyName = "blacklistedAreaSounds",
 			name = "Blacklist Area Sounds",
-			description = "Sound ids consumed regardless of the 'Consume Area Sound Effects' config option being enabled\n" +
+			description = "Sound ids consumed regardless of the 'Consume Area Sound Effects' config option being enabled<br>" +
 					"Format: 123,456,789",
 			position = 5,
 			section = AREA_SOUND_EFFECTS_SECTION
@@ -171,11 +171,21 @@ public interface SoundSwapperConfig extends Config
 	@ConfigItem(
 			keyName = "debugSoundEffects",
 			name = "Debug Sounds Effects",
-			description = "Display the sound effects that play (max 10 lines displayed)\n" +
-					"White: Sound Effect (G)\n" +
-					"Yellow: Area Sound Effect (A)\n" +
+			description = "Display the sound effects that play (max 10 lines displayed)<br><br>" +
+					"White: Sound Effect (G)<br>" +
+					"Yellow: Area Sound Effect (A)<br>" +
 					"Gray: Silent Area Sound Effect (SA)",
-			position = 99
+			position = 98
 	)
 	default boolean debugSoundEffects() { return false; }
+
+	@ConfigItem(
+			keyName = "allowSimultaneousSounds",
+			name = "Allow Simultaneous Sounds",
+			description = "With this enabled, if a custom sound is triggered BEFORE the original sound finished playing,<br>" +
+					" it will allow the custom sound to play on top of the prior instance regardless if it is completed or not.<br><br>" +
+					"Please note: this may have negative affects on performance for less powerful systems.",
+			position = 99
+	)
+	default boolean allowSimultaneousSounds() { return false; }
 }

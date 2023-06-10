@@ -8,3 +8,7 @@ E.g. *157,205,550* -> place *157.wav*, *205.wav*, and *550.wav* in the SoundSwap
 
 To find Sound IDs, you can check https://oldschool.runescape.wiki/w/List_of_in-game_sound_IDs or use the Visual Sounds
 Plugin on the hub.
+
+If you experience any issues or have any concerns, please reach out to Pete OR Damen via a GitHub Issue or by Discord Messaging directly ("Cyber#4309" OR "damen") OR via the Runelite Discord by mentioning @Paperman AND/OR @Damen.
+
+You can also receive assistance for any plugin that Damen manages on the plugin hub in the following **Discord**: https://discord.gg/F2mfSvcnaj - This Discord will cover FAQ, Known Issues, and Feature Requests.
