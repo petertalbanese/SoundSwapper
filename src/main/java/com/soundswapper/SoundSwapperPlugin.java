@@ -72,8 +72,9 @@ public class SoundSwapperPlugin extends Plugin
 	@Inject
 	private SoundEffectOverlay soundEffectOverlay;
 
-	public HashMap<Integer, Clip> soundClips = new HashMap<>();
-	public HashMap<Integer, Clip> areaSoundClips = new HashMap<>();
+	public HashMap<Integer, Sound> customSounds = new HashMap<>();
+
+	public HashMap<Integer, Sound> customAreaSounds = new HashMap<>();
 
 	public List<Integer> whitelistedSounds = new ArrayList<>();
 	public List<Integer> whitelistedAreaSounds = new ArrayList<>();
@@ -93,17 +94,17 @@ public class SoundSwapperPlugin extends Plugin
 	@Override
 	protected void startUp() throws Exception
 	{
-        try
+		try
 		{
-            if (!SOUND_DIR.exists())
-            {
-                SOUND_DIR.mkdir();
-            }
-        }
+			if (!SOUND_DIR.exists())
+			{
+				SOUND_DIR.mkdir();
+			}
+		}
 		catch (SecurityException securityException)
-        {
-            log.error("Attempted to create SoundSwapper directory and a security exception prompted a fault");
-        }
+		{
+			log.error("Attempted to create SoundSwapper directory and a security exception prompted a fault");
+		}
 
 		updateLists();
 
@@ -131,13 +132,13 @@ public class SoundSwapperPlugin extends Plugin
 		{
 			case "customSounds":
 			{
-				updateClipList(soundClips, event.getNewValue());
+				updateSoundList(customSounds, event.getNewValue());
 				break;
 			}
 
 			case "customAreaSounds":
 			{
-				updateClipList(areaSoundClips, event.getNewValue());
+				updateSoundList(customAreaSounds, event.getNewValue());
 				break;
 			}
 
@@ -173,12 +174,12 @@ public class SoundSwapperPlugin extends Plugin
 	{
 		if (!config.customSounds().isEmpty())
 		{
-			updateClipList(soundClips, config.customSounds());
+			updateSoundList(customSounds, config.customSounds());
 		}
 
 		if (!config.customAreaSounds().isEmpty())
 		{
-			updateClipList(areaSoundClips, config.customAreaSounds());
+			updateSoundList(customAreaSounds, config.customAreaSounds());
 		}
 
 		if (!config.whitelistSounds().isEmpty())
@@ -209,19 +210,10 @@ public class SoundSwapperPlugin extends Plugin
 
 		if (config.soundEffects())
 		{
-			if (soundClips.containsKey(soundId))
+			if (customSounds.containsKey(soundId))
 			{
 				event.consume();
-
-				if (config.allowSimultaneousSounds())
-				{
-					Sound.play(soundId);
-				}
-				else
-				{
-					playCustomSound(soundClips.get(soundId));
-				}
-
+				playCustomSound(customSounds.get(soundId));
 				return;
 			}
 		}
@@ -246,19 +238,10 @@ public class SoundSwapperPlugin extends Plugin
 
 		if (config.areaSoundEffects())
 		{
-			if (areaSoundClips.containsKey(soundId))
+			if (customAreaSounds.containsKey(soundId))
 			{
 				event.consume();
-
-				if (config.allowSimultaneousSounds())
-				{
-					Sound.play(soundId);
-				}
-				else
-				{
-					playCustomSound(areaSoundClips.get(soundId));
-				}
-
+				playCustomSound(customAreaSounds.get(soundId));
 				return;
 			}
 		}
@@ -276,7 +259,7 @@ public class SoundSwapperPlugin extends Plugin
 		}
 	}
 
-	private boolean tryLoadSound(HashMap<Integer, Clip> map, String sound_name, Integer sound_id)
+	private boolean tryLoadSound(HashMap<Integer, Sound> sounds, String sound_name, Integer sound_id)
 	{
 		File sound_file = new File(SOUND_DIR, sound_name + ".wav");
 
@@ -285,15 +268,18 @@ public class SoundSwapperPlugin extends Plugin
 			try
 			{
 				InputStream fileStream = new BufferedInputStream(new FileInputStream(sound_file));
-				AudioInputStream sound = AudioSystem.getAudioInputStream(fileStream);
+				AudioInputStream stream = AudioSystem.getAudioInputStream(fileStream);
 
-				Clip clip = AudioSystem.getClip();
-				clip.open(sound);
-				map.put(sound_id, clip);
+				int streamLen = (int)stream.getFrameLength() * stream.getFormat().getFrameSize();
+				byte[] bytes = new byte[streamLen];
+				stream.read(bytes);
+
+				Sound sound = new Sound(bytes, stream.getFormat(), streamLen);
+				sounds.put(sound_id, sound);
 
 				return true;
 			}
-			catch (UnsupportedAudioFileException | IOException | LineUnavailableException e)
+			catch (UnsupportedAudioFileException | IOException e)
 			{
 				log.warn("Unable to load custom sound " + sound_name, e);
 			}
@@ -302,29 +288,16 @@ public class SoundSwapperPlugin extends Plugin
 		return false;
 	}
 
-	private void updateClipList(HashMap<Integer, Clip> clips, String configText)
+	private void updateSoundList(HashMap<Integer, Sound> sounds, String configText)
 	{
-		for (int sound : clips.keySet())
-		{
-			Clip clip = clips.get(sound);
-
-			if (clip != null)
-			{
-				if (clip.isOpen())
-				{
-					clip.close();
-				}
-			}
-		}
-
-		clips.clear();
+		sounds.clear();
 
 		for (String s : Text.fromCSV(configText))
 		{
 			try
 			{
 				int id = Integer.parseInt(s);
-				tryLoadSound(clips, s, id);
+				tryLoadSound(sounds, s, id);
 			} catch (NumberFormatException e)
 			{
 				log.warn("Invalid sound ID: {}", s);
@@ -356,21 +329,22 @@ public class SoundSwapperPlugin extends Plugin
 		return ids;
 	}
 
-	private void playCustomSound(Clip clip)
+	private void playCustomSound(Sound sound)
 	{
-		if (clip == null)
-		{
-			return;
+		try {
+			Clip clip = AudioSystem.getClip();
+			clip.open(sound.getFormat(), sound.getBytes(), 0, sound.getNumBytes());
+			clip.setFramePosition(0);
+			clip.start();
+		} catch (LineUnavailableException e) {
+			log.warn("Failed to play custom sound");
 		}
-
-		clip.setFramePosition(0);
-		clip.start();
 	}
 
 	private void reset()
 	{
-		soundClips = new HashMap<>();
-		areaSoundClips = new HashMap<>();
+		customSounds = new HashMap<>();
+		customAreaSounds = new HashMap<>();
 		whitelistedSounds = new ArrayList<>();
 		whitelistedAreaSounds = new ArrayList<>();
 		blacklistedSounds = new ArrayList<>();

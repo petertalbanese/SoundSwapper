@@ -123,7 +123,7 @@ class SoundEffectOverlay extends OverlayPanel
 			actionColor = COLOR_WHITELISTED;
 		}
 
-		if (plugin.soundClips.containsKey(soundId))
+		if (plugin.customSounds.containsKey(soundId))
 		{
 			action = CUSTOM;
 			actionColor = COLOR_CUSTOM;
@@ -190,7 +190,7 @@ class SoundEffectOverlay extends OverlayPanel
 			actionColor = COLOR_WHITELISTED;
 		}
 
-		if (plugin.areaSoundClips.containsKey(soundId))
+		if (plugin.customAreaSounds.containsKey(soundId))
 		{
 			action = CUSTOM;
 			actionColor = COLOR_CUSTOM;

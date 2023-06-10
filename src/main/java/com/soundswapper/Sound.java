@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2023, petertalbanese <https://github.com/petertalbanese>
  * Copyright (c) 2023, damencs <https://github.com/damencs>
  * All rights reserved.
  *
@@ -24,35 +25,29 @@
  */
 package com.soundswapper;
 
-import lombok.extern.slf4j.Slf4j;
-import net.runelite.client.RuneLite;
+import javax.sound.sampled.AudioFormat;
 
-import javax.sound.sampled.*;
-import java.io.*;
+public class Sound {
+    private byte[] bytes;
+    private AudioFormat format;
+    private int numBytes;
 
-@Slf4j
-public class Sound
-{
-    private static final File SOUND_DIR = new File(RuneLite.RUNELITE_DIR, "SoundSwapper");
-
-    public static synchronized void play(final Integer soundId)
+    Sound(byte[] bytes, AudioFormat format, int numBytes)
     {
-        File sound_file = new File(SOUND_DIR, String.valueOf(soundId) + ".wav");
+        this.bytes = bytes;
+        this.format = format;
+        this.numBytes = numBytes;
+    }
 
-        new Thread(() ->
-        {
-            try
-            {
-                InputStream fileStream = new BufferedInputStream(new FileInputStream(sound_file));
-                AudioInputStream soundFile = AudioSystem.getAudioInputStream(fileStream);
-                Clip clip  = AudioSystem.getClip();
-                clip.open(soundFile);
-                clip.start();
-            }
-            catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception)
-            {
-                log.info("exception: {}", exception);
-            }
-        }).start();
+    public byte[] getBytes() {
+        return bytes;
+    }
+
+    public AudioFormat getFormat() {
+        return format;
+    }
+
+    public int getNumBytes() {
+        return numBytes;
     }
 }
