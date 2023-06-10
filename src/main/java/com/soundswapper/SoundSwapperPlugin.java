@@ -117,6 +117,7 @@ public class SoundSwapperPlugin extends Plugin
 	{
 		eventBus.unregister(soundEffectOverlay);
 		overlayManager.remove(soundEffectOverlay);
+		reset();
 	}
 
 	@Subscribe
@@ -132,38 +133,41 @@ public class SoundSwapperPlugin extends Plugin
 			case "customSounds":
 			{
 				updateClipList(soundClips, event.getNewValue());
+				break;
 			}
 
 			case "customAreaSounds":
 			{
 				updateClipList(areaSoundClips, event.getNewValue());
+				break;
 			}
 
-			case "whitelistOtherSounds":
+			case "whitelistSounds":
 			{
 				whitelistedSounds = getIds(event.getNewValue());
+				break;
 			}
 
 			case "whitelistAreaSounds":
 			{
 				whitelistedAreaSounds = getIds(event.getNewValue());
+				break;
 			}
 
 			case "blacklistedSounds":
 			{
 				blacklistedSounds = getIds(event.getNewValue());
+				break;
 			}
 
 			case "blacklistedAreaSounds":
 			{
 				blacklistedAreaSounds = getIds(event.getNewValue());
-			}
-
-			case "debugSoundEffects":
-			{
-				soundEffectOverlay.resetLines();
+				break;
 			}
 		}
+
+		soundEffectOverlay.resetLines();
 	}
 
 	void updateLists()
@@ -344,5 +348,16 @@ public class SoundSwapperPlugin extends Plugin
 
 		clip.setFramePosition(0);
 		clip.start();
+	}
+
+	private void reset()
+	{
+		soundClips = new HashMap<>();
+		areaSoundClips = new HashMap<>();
+		whitelistedSounds = new ArrayList<>();
+		whitelistedAreaSounds = new ArrayList<>();
+		blacklistedSounds = new ArrayList<>();
+		blacklistedAreaSounds = new ArrayList<>();
+		soundEffectOverlay.resetLines();
 	}
 }

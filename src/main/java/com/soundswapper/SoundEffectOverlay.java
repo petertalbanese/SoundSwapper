@@ -107,11 +107,8 @@ class SoundEffectOverlay extends OverlayPanel
 
 		if (config.consumeSoundEffects())
 		{
-			if (!plugin.whitelistedSounds.contains(soundId) && !plugin.soundClips.containsKey(soundId))
-			{
-				action = CONSUMED;
-				actionColor = COLOR_CONSUMED;
-			}
+			action = CONSUMED;
+			actionColor = COLOR_CONSUMED;
 		}
 
 		if (plugin.blacklistedSounds.contains(soundId))
