@@ -49,306 +49,308 @@ import java.util.List;
 
 @Slf4j
 @PluginDescriptor(
-		name = "Sound Swapper",
-		enabledByDefault = false,
-		description = "Allows the user to replace any sound effect.<br><br>" +
-				"To replace a sound, add its ID to the list in the plugin menu, then place a .wav file with the same name in your root<br>" +
-				"RuneLite folder. The plugin will grab the sound and use it instead!"
+        name = "Sound Swapper",
+        enabledByDefault = false,
+        description = "Allows the user to replace any sound effect.<br><br>" +
+                "To replace a sound, add its ID to the list in the plugin menu, then place a .wav file with the same name in your root<br>" +
+                "RuneLite folder. The plugin will grab the sound and use it instead!"
 )
 public class SoundSwapperPlugin extends Plugin
 {
-	@Inject
-	private Client client;
+    @Inject
+    private Client client;
 
-	@Inject
-	private EventBus eventBus;
+    @Inject
+    private EventBus eventBus;
 
-	@Inject
-	private SoundSwapperConfig config;
+    @Inject
+    private SoundSwapperConfig config;
 
-	@Inject
-	private OverlayManager overlayManager;
+    @Inject
+    private OverlayManager overlayManager;
 
-	@Inject
-	private SoundEffectOverlay soundEffectOverlay;
+    @Inject
+    private SoundEffectOverlay soundEffectOverlay;
 
-	public HashMap<Integer, Sound> customSounds = new HashMap<>();
+    public HashMap<Integer, Sound> customSounds = new HashMap<>();
 
-	public HashMap<Integer, Sound> customAreaSounds = new HashMap<>();
+    public HashMap<Integer, Sound> customAreaSounds = new HashMap<>();
 
-	public List<Integer> whitelistedSounds = new ArrayList<>();
-	public List<Integer> whitelistedAreaSounds = new ArrayList<>();
-	public List<Integer> blacklistedSounds = new ArrayList<>();
-	public List<Integer> blacklistedAreaSounds = new ArrayList<>();
+    public List<Integer> whitelistedSounds = new ArrayList<>();
+    public List<Integer> whitelistedAreaSounds = new ArrayList<>();
+    public List<Integer> blacklistedSounds = new ArrayList<>();
+    public List<Integer> blacklistedAreaSounds = new ArrayList<>();
 
-	private static final File SOUND_DIR = new File(RuneLite.RUNELITE_DIR, "SoundSwapper");
+    private static final File SOUND_DIR = new File(RuneLite.RUNELITE_DIR, "SoundSwapper");
 
-	private static final String CONFIG_GROUP = "soundswapper";
+    private static final String CONFIG_GROUP = "soundswapper";
 
-	@Provides
-	SoundSwapperConfig provideConfig(ConfigManager configManager)
-	{
-		return configManager.getConfig(SoundSwapperConfig.class);
-	}
+    @Provides
+    SoundSwapperConfig provideConfig(ConfigManager configManager)
+    {
+        return configManager.getConfig(SoundSwapperConfig.class);
+    }
 
-	@Override
-	protected void startUp() throws Exception
-	{
-		try
-		{
-			if (!SOUND_DIR.exists())
-			{
-				SOUND_DIR.mkdir();
-			}
-		}
-		catch (SecurityException securityException)
-		{
-			log.error("Attempted to create SoundSwapper directory and a security exception prompted a fault");
-		}
+    @Override
+    protected void startUp() throws Exception
+    {
+        try
+        {
+            if (!SOUND_DIR.exists())
+            {
+                SOUND_DIR.mkdir();
+            }
+        }
+        catch (SecurityException securityException)
+        {
+            log.error("Attempted to create SoundSwapper directory and a security exception prompted a fault");
+        }
 
-		updateLists();
+        updateLists();
 
-		overlayManager.add(soundEffectOverlay);
-		eventBus.register(soundEffectOverlay);
-	}
+        overlayManager.add(soundEffectOverlay);
+        eventBus.register(soundEffectOverlay);
+    }
 
-	@Override
-	protected void shutDown() throws Exception
-	{
-		eventBus.unregister(soundEffectOverlay);
-		overlayManager.remove(soundEffectOverlay);
-		reset();
-	}
+    @Override
+    protected void shutDown() throws Exception
+    {
+        eventBus.unregister(soundEffectOverlay);
+        overlayManager.remove(soundEffectOverlay);
+        reset();
+    }
 
-	@Subscribe
-	public void onConfigChanged(ConfigChanged event)
-	{
-		if (!CONFIG_GROUP.equals(event.getGroup()))
-		{
-			return;
-		}
+    @Subscribe
+    public void onConfigChanged(ConfigChanged event)
+    {
+        if (!CONFIG_GROUP.equals(event.getGroup()))
+        {
+            return;
+        }
 
-		switch (event.getKey())
-		{
-			case "customSounds":
-			{
-				updateSoundList(customSounds, event.getNewValue());
-				break;
-			}
+        switch (event.getKey())
+        {
+            case "customSounds":
+            {
+                updateSoundList(customSounds, event.getNewValue());
+                break;
+            }
 
-			case "customAreaSounds":
-			{
-				updateSoundList(customAreaSounds, event.getNewValue());
-				break;
-			}
+            case "customAreaSounds":
+            {
+                updateSoundList(customAreaSounds, event.getNewValue());
+                break;
+            }
 
-			case "whitelistSounds":
-			{
-				whitelistedSounds = getIds(event.getNewValue());
-				break;
-			}
+            case "whitelistSounds":
+            {
+                whitelistedSounds = getIds(event.getNewValue());
+                break;
+            }
 
-			case "whitelistAreaSounds":
-			{
-				whitelistedAreaSounds = getIds(event.getNewValue());
-				break;
-			}
+            case "whitelistAreaSounds":
+            {
+                whitelistedAreaSounds = getIds(event.getNewValue());
+                break;
+            }
 
-			case "blacklistedSounds":
-			{
-				blacklistedSounds = getIds(event.getNewValue());
-				break;
-			}
+            case "blacklistedSounds":
+            {
+                blacklistedSounds = getIds(event.getNewValue());
+                break;
+            }
 
-			case "blacklistedAreaSounds":
-			{
-				blacklistedAreaSounds = getIds(event.getNewValue());
-				break;
-			}
-		}
+            case "blacklistedAreaSounds":
+            {
+                blacklistedAreaSounds = getIds(event.getNewValue());
+                break;
+            }
+        }
 
-		soundEffectOverlay.resetLines();
-	}
+        soundEffectOverlay.resetLines();
+    }
 
-	void updateLists()
-	{
-		if (!config.customSounds().isEmpty())
-		{
-			updateSoundList(customSounds, config.customSounds());
-		}
+    void updateLists()
+    {
+        if (!config.customSounds().isEmpty())
+        {
+            updateSoundList(customSounds, config.customSounds());
+        }
 
-		if (!config.customAreaSounds().isEmpty())
-		{
-			updateSoundList(customAreaSounds, config.customAreaSounds());
-		}
+        if (!config.customAreaSounds().isEmpty())
+        {
+            updateSoundList(customAreaSounds, config.customAreaSounds());
+        }
 
-		if (!config.whitelistSounds().isEmpty())
-		{
-			whitelistedSounds = getIds(config.whitelistSounds());
-		}
+        if (!config.whitelistSounds().isEmpty())
+        {
+            whitelistedSounds = getIds(config.whitelistSounds());
+        }
 
-		if (!config.whitelistAreaSounds().isEmpty())
-		{
-			whitelistedAreaSounds = getIds(config.whitelistAreaSounds());
-		}
+        if (!config.whitelistAreaSounds().isEmpty())
+        {
+            whitelistedAreaSounds = getIds(config.whitelistAreaSounds());
+        }
 
-		if (!config.blacklistedSounds().isEmpty())
-		{
-			blacklistedSounds = getIds(config.blacklistedSounds());
-		}
+        if (!config.blacklistedSounds().isEmpty())
+        {
+            blacklistedSounds = getIds(config.blacklistedSounds());
+        }
 
-		if (!config.blacklistedAreaSounds().isEmpty())
-		{
-			blacklistedAreaSounds = getIds(config.blacklistedAreaSounds());
-		}
-	}
+        if (!config.blacklistedAreaSounds().isEmpty())
+        {
+            blacklistedAreaSounds = getIds(config.blacklistedAreaSounds());
+        }
+    }
 
-	@Subscribe
-	public void onSoundEffectPlayed(SoundEffectPlayed event)
-	{
-		int soundId = event.getSoundId();
+    @Subscribe
+    public void onSoundEffectPlayed(SoundEffectPlayed event)
+    {
+        int soundId = event.getSoundId();
 
-		if (config.soundEffects())
-		{
-			if (customSounds.containsKey(soundId))
-			{
-				event.consume();
-				playCustomSound(customSounds.get(soundId));
-				return;
-			}
-		}
+        if (config.soundEffects())
+        {
+            if (customSounds.containsKey(soundId))
+            {
+                event.consume();
+                playCustomSound(customSounds.get(soundId));
+                return;
+            }
+        }
 
-		if (config.consumeSoundEffects() || blacklistedSounds.contains(soundId))
-		{
-			if (!whitelistedSounds.isEmpty() && whitelistedSounds.contains(soundId))
-			{
-				log.debug("whitelisted other sound effect passed: {}", soundId);
-				return;
-			}
+        if (config.consumeSoundEffects() || blacklistedSounds.contains(soundId))
+        {
+            if (!whitelistedSounds.isEmpty() && whitelistedSounds.contains(soundId))
+            {
+                log.debug("whitelisted other sound effect passed: {}", soundId);
+                return;
+            }
 
-			log.debug("consumed other sound effect: {}", soundId);
-			event.consume();
-		}
-	}
+            log.debug("consumed other sound effect: {}", soundId);
+            event.consume();
+        }
+    }
 
-	@Subscribe
-	public void onAreaSoundEffectPlayed(AreaSoundEffectPlayed event)
-	{
-		int soundId = event.getSoundId();
+    @Subscribe
+    public void onAreaSoundEffectPlayed(AreaSoundEffectPlayed event)
+    {
+        int soundId = event.getSoundId();
 
-		if (config.areaSoundEffects())
-		{
-			if (customAreaSounds.containsKey(soundId))
-			{
-				event.consume();
-				playCustomSound(customAreaSounds.get(soundId));
-				return;
-			}
-		}
+        if (config.areaSoundEffects())
+        {
+            if (customAreaSounds.containsKey(soundId))
+            {
+                event.consume();
+                playCustomSound(customAreaSounds.get(soundId));
+                return;
+            }
+        }
 
-		if (config.consumeAreaSounds() || blacklistedSounds.contains(soundId))
-		{
-			if (!whitelistedAreaSounds.isEmpty() && whitelistedAreaSounds.contains(soundId))
-			{
-				log.debug("whitelisted area sound effect passed: {}", soundId);
-				return;
-			}
+        if (config.consumeAreaSounds() || blacklistedSounds.contains(soundId))
+        {
+            if (!whitelistedAreaSounds.isEmpty() && whitelistedAreaSounds.contains(soundId))
+            {
+                log.debug("whitelisted area sound effect passed: {}", soundId);
+                return;
+            }
 
-			log.debug("consumed area sound effect: {}", soundId);
-			event.consume();
-		}
-	}
+            log.debug("consumed area sound effect: {}", soundId);
+            event.consume();
+        }
+    }
 
-	private boolean tryLoadSound(HashMap<Integer, Sound> sounds, String sound_name, Integer sound_id)
-	{
-		File sound_file = new File(SOUND_DIR, sound_name + ".wav");
+    private boolean tryLoadSound(HashMap<Integer, Sound> sounds, String sound_name, Integer sound_id)
+    {
+        File sound_file = new File(SOUND_DIR, sound_name + ".wav");
 
-		if (sound_file.exists())
-		{
-			try
-			{
-				InputStream fileStream = new BufferedInputStream(new FileInputStream(sound_file));
-				AudioInputStream stream = AudioSystem.getAudioInputStream(fileStream);
+        if (sound_file.exists())
+        {
+            try
+            {
+                InputStream fileStream = new BufferedInputStream(new FileInputStream(sound_file));
+                AudioInputStream stream = AudioSystem.getAudioInputStream(fileStream);
 
-				int streamLen = (int)stream.getFrameLength() * stream.getFormat().getFrameSize();
-				byte[] bytes = new byte[streamLen];
-				stream.read(bytes);
+                int streamLen = (int)stream.getFrameLength() * stream.getFormat().getFrameSize();
+                byte[] bytes = new byte[streamLen];
+                stream.read(bytes);
 
-				Sound sound = new Sound(bytes, stream.getFormat(), streamLen);
-				sounds.put(sound_id, sound);
+                Sound sound = new Sound(bytes, stream.getFormat(), streamLen);
+                sounds.put(sound_id, sound);
 
-				return true;
-			}
-			catch (UnsupportedAudioFileException | IOException e)
-			{
-				log.warn("Unable to load custom sound " + sound_name, e);
-			}
-		}
+                return true;
+            }
+            catch (UnsupportedAudioFileException | IOException e)
+            {
+                log.warn("Unable to load custom sound " + sound_name, e);
+            }
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	private void updateSoundList(HashMap<Integer, Sound> sounds, String configText)
-	{
-		sounds.clear();
+    private void updateSoundList(HashMap<Integer, Sound> sounds, String configText)
+    {
+        sounds.clear();
 
-		for (String s : Text.fromCSV(configText))
-		{
-			try
-			{
-				int id = Integer.parseInt(s);
-				tryLoadSound(sounds, s, id);
-			} catch (NumberFormatException e)
-			{
-				log.warn("Invalid sound ID: {}", s);
-			}
-		}
-	}
+        for (String s : Text.fromCSV(configText))
+        {
+            try
+            {
+                int id = Integer.parseInt(s);
+                tryLoadSound(sounds, s, id);
+            } catch (NumberFormatException e)
+            {
+                log.warn("Invalid sound ID: {}", s);
+            }
+        }
+    }
 
-	private List<Integer> getIds(String configText)
-	{
-		if (configText == null || configText.isEmpty())
-		{
-			return List.of();
-		}
+    private List<Integer> getIds(String configText)
+    {
+        if (configText == null || configText.isEmpty())
+        {
+            return List.of();
+        }
 
-		List<Integer> ids = new ArrayList<>();
-		for (String s : Text.fromCSV(configText))
-		{
-			try
-			{
-				int id = Integer.parseInt(s);
-				ids.add(id);
-			}
-			catch (NumberFormatException e)
-			{
-				log.warn("Invalid id when parsing {}: {}", configText, s);
-			}
-		}
+        List<Integer> ids = new ArrayList<>();
+        for (String s : Text.fromCSV(configText))
+        {
+            try
+            {
+                int id = Integer.parseInt(s);
+                ids.add(id);
+            }
+            catch (NumberFormatException e)
+            {
+                log.warn("Invalid id when parsing {}: {}", configText, s);
+            }
+        }
 
-		return ids;
-	}
+        return ids;
+    }
 
-	private void playCustomSound(Sound sound)
-	{
-		try {
-			Clip clip = AudioSystem.getClip();
-			clip.open(sound.getFormat(), sound.getBytes(), 0, sound.getNumBytes());
-			clip.setFramePosition(0);
-			clip.start();
-		} catch (LineUnavailableException e) {
-			log.warn("Failed to play custom sound");
-		}
-	}
+    private void playCustomSound(Sound sound)
+    {
+        try
+        {
+            Clip clip = AudioSystem.getClip();
+            clip.open(sound.getFormat(), sound.getBytes(), 0, sound.getNumBytes());
+            clip.setFramePosition(0);
+            clip.start();
+        } catch (LineUnavailableException e)
+        {
+            log.warn("Failed to play custom sound");
+        }
+    }
 
-	private void reset()
-	{
-		customSounds = new HashMap<>();
-		customAreaSounds = new HashMap<>();
-		whitelistedSounds = new ArrayList<>();
-		whitelistedAreaSounds = new ArrayList<>();
-		blacklistedSounds = new ArrayList<>();
-		blacklistedAreaSounds = new ArrayList<>();
-		soundEffectOverlay.resetLines();
-	}
+    private void reset()
+    {
+        customSounds = new HashMap<>();
+        customAreaSounds = new HashMap<>();
+        whitelistedSounds = new ArrayList<>();
+        whitelistedAreaSounds = new ArrayList<>();
+        blacklistedSounds = new ArrayList<>();
+        blacklistedAreaSounds = new ArrayList<>();
+        soundEffectOverlay.resetLines();
+    }
 }

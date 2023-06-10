@@ -27,7 +27,8 @@ package com.soundswapper;
 
 import javax.sound.sampled.AudioFormat;
 
-public class Sound {
+public class Sound
+{
     private byte[] bytes;
     private AudioFormat format;
     private int numBytes;
