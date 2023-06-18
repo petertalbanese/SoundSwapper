@@ -178,14 +178,4 @@ public interface SoundSwapperConfig extends Config
             position = 98
     )
     default boolean debugSoundEffects() { return false; }
-
-    @ConfigItem(
-            keyName = "allowSimultaneousSounds",
-            name = "Allow Simultaneous Sounds",
-            description = "With this enabled, if a custom sound is triggered BEFORE the original sound finished playing,<br>" +
-                    " it will allow the custom sound to play on top of the prior instance regardless if it is completed or not.<br><br>" +
-                    "Please note: this may have negative affects on performance for less powerful systems.",
-            position = 99
-    )
-    default boolean allowSimultaneousSounds() { return false; }
 }
