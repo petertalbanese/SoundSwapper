@@ -40,15 +40,18 @@ public class Sound
         this.numBytes = numBytes;
     }
 
-    public byte[] getBytes() {
+    public byte[] getBytes()
+    {
         return bytes;
     }
 
-    public AudioFormat getFormat() {
+    public AudioFormat getFormat()
+    {
         return format;
     }
 
-    public int getNumBytes() {
+    public int getNumBytes()
+    {
         return numBytes;
     }
 }
