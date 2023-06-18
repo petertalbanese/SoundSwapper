@@ -25,10 +25,7 @@
  */
 package com.soundswapper;
 
-import net.runelite.client.config.Config;
-import net.runelite.client.config.ConfigGroup;
-import net.runelite.client.config.ConfigItem;
-import net.runelite.client.config.ConfigSection;
+import net.runelite.client.config.*;
 
 @ConfigGroup("soundswapper")
 public interface SoundSwapperConfig extends Config
@@ -111,6 +108,28 @@ public interface SoundSwapperConfig extends Config
     }
 
     @ConfigItem(
+            keyName = "enableCustomSoundsVolume",
+            name = "Enable Custom Volume",
+            description = "Enable the ability to set the volume of custom sound effects",
+            position = 6,
+            section = SOUND_EFFECTS_SECTION
+    )
+    default boolean enableCustomSoundsVolume() { return false; }
+
+    @Range(max = 100)
+    @ConfigItem(
+            name = "Custom Sounds Volume",
+            keyName = "customSoundsVolume",
+            description = "Sets the volume of the sound clips for Sound Effects",
+            position = 7,
+            section = SOUND_EFFECTS_SECTION
+    )
+    default int customSoundsVolume()
+    {
+        return 65;
+    }
+
+    @ConfigItem(
             keyName = "areaSoundEffects",
             name = "Swap Area Sounds",
             description = "Swap area sound effects with custom sounds",
@@ -166,6 +185,28 @@ public interface SoundSwapperConfig extends Config
     default String blacklistedAreaSounds()
     {
         return "";
+    }
+
+    @ConfigItem(
+            keyName = "enableCustomAreaSoundsVolume",
+            name = "Enable Custom Volume",
+            description = "Enable the ability to set the volume of custom sound effects",
+            position = 6,
+            section = AREA_SOUND_EFFECTS_SECTION
+    )
+    default boolean enableCustomAreaSoundsVolume() { return false; }
+
+    @Range(max = 100)
+    @ConfigItem(
+            name = "Custom Sounds Volume",
+            keyName = "customAreaSoundsVolume",
+            description = "Sets the volume of the sound clips for Sound Effects",
+            position = 7,
+            section = AREA_SOUND_EFFECTS_SECTION
+    )
+    default int customAreaSoundsVolume()
+    {
+        return 65;
     }
 
     @ConfigItem(

@@ -213,7 +213,7 @@ public class SoundSwapperPlugin extends Plugin
             if (customSounds.containsKey(soundId))
             {
                 event.consume();
-                playCustomSound(customSounds.get(soundId));
+                playCustomSound(customSounds.get(soundId), (config.enableCustomSoundsVolume() ? config.customSoundsVolume() : -1));
                 return;
             }
         }
@@ -241,7 +241,7 @@ public class SoundSwapperPlugin extends Plugin
             if (customAreaSounds.containsKey(soundId))
             {
                 event.consume();
-                playCustomSound(customAreaSounds.get(soundId));
+                playCustomSound(customAreaSounds.get(soundId), (config.enableCustomAreaSoundsVolume() ? config.customAreaSoundsVolume() : -1));
                 return;
             }
         }
@@ -329,12 +329,23 @@ public class SoundSwapperPlugin extends Plugin
         return ids;
     }
 
-    private void playCustomSound(Sound sound)
+    private void playCustomSound(Sound sound, int volume)
     {
         try
         {
             Clip clip = AudioSystem.getClip();
             clip.open(sound.getFormat(), sound.getBytes(), 0, sound.getNumBytes());
+
+            if (volume != -1)
+            {
+                FloatControl control = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+
+                if (control != null)
+                {
+                    control.setValue((float)(volume / 2 - 45));
+                }
+            }
+
             clip.setFramePosition(0);
             clip.start();
         } catch (LineUnavailableException e)
