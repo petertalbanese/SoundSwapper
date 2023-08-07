@@ -212,7 +212,7 @@ public interface SoundSwapperConfig extends Config
     @ConfigItem(
             keyName = "consumeAmbientSounds",
             name = "Consume Ambient Sounds",
-            description = "Consume any ambient sound effects",
+            description = "Consume any ambient sound effects while in-game AoE sounds are enabled",
             position = 8,
             section = AREA_SOUND_EFFECTS_SECTION
     )
