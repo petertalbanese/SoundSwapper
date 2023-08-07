@@ -28,7 +28,9 @@ package com.soundswapper;
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.GameState;
 import net.runelite.api.events.AreaSoundEffectPlayed;
+import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.SoundEffectPlayed;
 import net.runelite.client.RuneLite;
 import net.runelite.client.config.ConfigManager;
@@ -164,6 +166,16 @@ public class SoundSwapperPlugin extends Plugin
                 blacklistedAreaSounds = getIds(event.getNewValue());
                 break;
             }
+
+            case "consumeAmbientSounds":
+            {
+                // Reload the scene to reapply ambient sounds
+                if (client.getGameState() == GameState.LOGGED_IN)
+                {
+                    client.setGameState(GameState.LOADING);
+                }
+                break;
+            }
         }
 
         soundEffectOverlay.resetLines();
@@ -255,6 +267,19 @@ public class SoundSwapperPlugin extends Plugin
 
             log.debug("consumed area sound effect: {}", soundId);
             event.consume();
+        }
+    }
+
+    @Subscribe
+    public void onGameStateChanged(GameStateChanged gameStateChanged)
+    {
+        GameState gameState = gameStateChanged.getGameState();
+        if (gameState == GameState.LOGGED_IN)
+        {
+            if (config.consumeAmbientSounds())
+            {
+                client.getAmbientSoundEffects().clear();
+            }
         }
     }
 

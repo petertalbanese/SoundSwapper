@@ -210,6 +210,15 @@ public interface SoundSwapperConfig extends Config
     }
 
     @ConfigItem(
+            keyName = "consumeAmbientSounds",
+            name = "Consume Ambient Sounds",
+            description = "Consume any ambient sound effects while in-game AoE sounds are enabled",
+            position = 8,
+            section = AREA_SOUND_EFFECTS_SECTION
+    )
+    default boolean consumeAmbientSounds() { return false; }
+
+    @ConfigItem(
             keyName = "debugSoundEffects",
             name = "Debug Sounds Effects",
             description = "Display the sound effects that play (max 10 lines displayed)<br><br>" +
