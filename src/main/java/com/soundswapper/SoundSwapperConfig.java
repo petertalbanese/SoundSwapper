@@ -47,6 +47,13 @@ public interface SoundSwapperConfig extends Config
     )
     String AREA_SOUND_EFFECTS_SECTION = "areaSoundEffects";
 
+    @ConfigSection(
+            name = "Ambient Sound Effects",
+            description = "Configuration settings for Ambient Sound Effects",
+            position = 3
+    )
+    String AMBIENT_SOUND_EFFECTS_SECTION = "ambientSoundEffects";
+
     /**
      * Config Items
      */
@@ -208,6 +215,15 @@ public interface SoundSwapperConfig extends Config
     {
         return 65;
     }
+
+    @ConfigItem(
+            keyName = "consumeAmbientSounds",
+            name = "Consume Ambient Sounds",
+            description = "Consume any ambient sound effects",
+            position = 1,
+            section = AMBIENT_SOUND_EFFECTS_SECTION
+    )
+    default boolean consumeAmbientSounds() { return false; }
 
     @ConfigItem(
             keyName = "debugSoundEffects",
