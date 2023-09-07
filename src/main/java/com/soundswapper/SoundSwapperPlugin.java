@@ -33,6 +33,7 @@ import net.runelite.api.events.AreaSoundEffectPlayed;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.SoundEffectPlayed;
 import net.runelite.client.RuneLite;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
@@ -60,6 +61,9 @@ public class SoundSwapperPlugin extends Plugin
 {
     @Inject
     private Client client;
+
+    @Inject
+    private ClientThread clientThread;
 
     @Inject
     private EventBus eventBus;
@@ -167,13 +171,15 @@ public class SoundSwapperPlugin extends Plugin
                 break;
             }
 
-            case "consumeAmbientSounds":
-            {
-                // Reload the scene to reapply ambient sounds
-                if (client.getGameState() == GameState.LOGGED_IN)
+            case "consumeAmbientSounds": {
+                clientThread.invokeLater(() ->
                 {
-                    client.setGameState(GameState.LOADING);
-                }
+                    // Reload the scene to reapply ambient sounds
+                    if (client.getGameState() == GameState.LOGGED_IN)
+                    {
+                        client.setGameState(GameState.LOADING);
+                    }
+                });
                 break;
             }
         }
