@@ -49,6 +49,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 @Slf4j
 @PluginDescriptor(
@@ -364,6 +365,13 @@ public class SoundSwapperPlugin extends Plugin
         try
         {
             Clip clip = AudioSystem.getClip();
+            CountDownLatch latch = new CountDownLatch(1);
+            clip.addLineListener(event -> {
+                if (event.getType() == LineEvent.Type.STOP) {
+                    latch.countDown(); // Signal that playback has finished
+                    clip.close();
+                }
+            });
             clip.open(sound.getFormat(), sound.getBytes(), 0, sound.getNumBytes());
 
             if (volume != -1)
@@ -377,7 +385,18 @@ public class SoundSwapperPlugin extends Plugin
             }
 
             clip.setFramePosition(0);
-            clip.start();
+            // Start playback in a separate thread
+            new Thread(clip::start).start();
+
+            // Wait for playback to finish without blocking the main thread
+            new Thread(() -> {
+                try {
+                    latch.await(); // Wait until the clip finishes playing
+                } catch (InterruptedException e) {
+                    log.warn("Failed to play custom sound");
+                    Thread.currentThread().interrupt();
+                }
+            }).start();
         } catch (LineUnavailableException e)
         {
             log.warn("Failed to play custom sound");
