@@ -364,6 +364,11 @@ public class SoundSwapperPlugin extends Plugin
         try
         {
             Clip clip = AudioSystem.getClip();
+            clip.addLineListener(event -> {
+                if (event.getType() == LineEvent.Type.STOP) {
+                    clip.close();
+                }
+            });
             clip.open(sound.getFormat(), sound.getBytes(), 0, sound.getNumBytes());
 
             if (volume != -1)
