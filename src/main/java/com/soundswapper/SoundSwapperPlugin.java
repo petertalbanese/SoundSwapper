@@ -186,12 +186,12 @@ public class SoundSwapperPlugin extends Plugin
             }
 
             case "simpleIdsToReplace": {
-                simpleIdsToSwap = getIds( event.getNewValue() );
+                simpleIdsToSwap = getIds(event.getNewValue());
                 break;
             }
 
             case "simpleIdsReplacements": {
-                simpleIdReplacements = getIds( event.getNewValue() );
+                simpleIdReplacements = getIds(event.getNewValue());
                 break;
             }
         }
