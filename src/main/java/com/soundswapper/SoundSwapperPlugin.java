@@ -85,6 +85,8 @@ public class SoundSwapperPlugin extends Plugin
     public List<Integer> whitelistedAreaSounds = new ArrayList<>();
     public List<Integer> blacklistedSounds = new ArrayList<>();
     public List<Integer> blacklistedAreaSounds = new ArrayList<>();
+    public List<Integer> simpleIdsToSwap = new ArrayList<>();
+    public List<Integer> simpleIdReplacements = new ArrayList<>();
 
     private static final File SOUND_DIR = new File(RuneLite.RUNELITE_DIR, "SoundSwapper");
 
@@ -182,6 +184,16 @@ public class SoundSwapperPlugin extends Plugin
                 });
                 break;
             }
+
+            case "simpleIdsToReplace": {
+                simpleIdsToSwap = getIds( event.getNewValue() );
+                break;
+            }
+
+            case "simpleIdsReplacements": {
+                simpleIdReplacements = getIds( event.getNewValue() );
+                break;
+            }
         }
 
         soundEffectOverlay.resetLines();
@@ -218,12 +230,36 @@ public class SoundSwapperPlugin extends Plugin
         {
             blacklistedAreaSounds = getIds(config.blacklistedAreaSounds());
         }
+
+        if (!config.simpleIdsToReplace().isEmpty())
+        {
+            simpleIdsToSwap = getIds(config.simpleIdsReplacements());
+        }
+
+        if (!config.simpleIdsReplacements().isEmpty())
+        {
+            simpleIdReplacements = getIds(config.simpleIdsReplacements());
+        }
     }
 
     @Subscribe
     public void onSoundEffectPlayed(SoundEffectPlayed event)
     {
         int soundId = event.getSoundId();
+
+        if (config.simpleIdSwaps()) {
+            if (simpleIdsToSwap.contains(soundId))
+            {
+                int idx = simpleIdsToSwap.indexOf(soundId);
+
+                if (idx < simpleIdReplacements.size())
+                {
+                    event.consume();
+                    soundId = -1;
+                    client.playSoundEffect(simpleIdReplacements.get(idx), 100 );
+                }
+            }
+        }
 
         if (config.soundEffects())
         {
@@ -252,6 +288,20 @@ public class SoundSwapperPlugin extends Plugin
     public void onAreaSoundEffectPlayed(AreaSoundEffectPlayed event)
     {
         int soundId = event.getSoundId();
+
+        if (config.simpleIdSwaps()) {
+            if (simpleIdsToSwap.contains(soundId))
+            {
+                int idx = simpleIdsToSwap.indexOf(soundId);
+
+                if (idx < simpleIdReplacements.size())
+                {
+                    event.consume();
+                    soundId = -1;
+                    client.playSoundEffect(simpleIdReplacements.get(idx));
+                }
+            }
+        }
 
         if (config.areaSoundEffects())
         {
