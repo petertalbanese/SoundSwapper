@@ -29,6 +29,8 @@ import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
+import net.runelite.api.Preferences;
+import net.runelite.api.SoundEffectVolume;
 import net.runelite.api.events.AreaSoundEffectPlayed;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.SoundEffectPlayed;
@@ -85,8 +87,8 @@ public class SoundSwapperPlugin extends Plugin
     public List<Integer> whitelistedAreaSounds = new ArrayList<>();
     public List<Integer> blacklistedSounds = new ArrayList<>();
     public List<Integer> blacklistedAreaSounds = new ArrayList<>();
-    public List<Integer> simpleIdsToSwap = new ArrayList<>();
-    public List<Integer> simpleIdReplacements = new ArrayList<>();
+    public List<Integer> nativeSoundIDsToSwap = new ArrayList<>();
+    public List<Integer> nativeSoundIDReplacements = new ArrayList<>();
 
     private static final File SOUND_DIR = new File(RuneLite.RUNELITE_DIR, "SoundSwapper");
 
@@ -185,13 +187,13 @@ public class SoundSwapperPlugin extends Plugin
                 break;
             }
 
-            case "simpleIdsToReplace": {
-                simpleIdsToSwap = getIds(event.getNewValue());
+            case "nativeSoundIDsToReplace": {
+                nativeSoundIDsToSwap = getIds( event.getNewValue() );
                 break;
             }
 
-            case "simpleIdsReplacements": {
-                simpleIdReplacements = getIds(event.getNewValue());
+            case "nativeSoundIDReplacements": {
+                nativeSoundIDReplacements = getIds( event.getNewValue() );
                 break;
             }
         }
@@ -231,14 +233,14 @@ public class SoundSwapperPlugin extends Plugin
             blacklistedAreaSounds = getIds(config.blacklistedAreaSounds());
         }
 
-        if (!config.simpleIdsToReplace().isEmpty())
+        if (!config.nativeSoundIDsToReplace().isEmpty())
         {
-            simpleIdsToSwap = getIds(config.simpleIdsReplacements());
+            nativeSoundIDsToSwap = getIds(config.nativeSoundIDsToReplace());
         }
 
-        if (!config.simpleIdsReplacements().isEmpty())
+        if (!config.nativeSoundIDReplacements().isEmpty())
         {
-            simpleIdReplacements = getIds(config.simpleIdsReplacements());
+            nativeSoundIDReplacements = getIds(config.nativeSoundIDReplacements());
         }
     }
 
@@ -247,16 +249,26 @@ public class SoundSwapperPlugin extends Plugin
     {
         int soundId = event.getSoundId();
 
-        if (config.simpleIdSwaps()) {
-            if (simpleIdsToSwap.contains(soundId))
+        if (config.nativeSoundIDSwapEnable()) {
+            if (nativeSoundIDsToSwap.contains(soundId))
             {
-                int idx = simpleIdsToSwap.indexOf(soundId);
+                int idx = nativeSoundIDsToSwap.indexOf(soundId);
+                Preferences preferences = client.getPreferences();
+                int originalVolume = preferences.getSoundEffectVolume();
+                int soundVolume =  originalVolume;
 
-                if (idx < simpleIdReplacements.size())
+                if (config.enableCustomSoundsVolume())
+                {
+                    soundVolume = config.customSoundsVolume() * SoundEffectVolume.HIGH / 100;
+                }
+
+                if (idx < nativeSoundIDReplacements.size())
                 {
                     event.consume();
-                    soundId = -1;
-                    client.playSoundEffect(simpleIdReplacements.get(idx), 100 );
+                    preferences.setSoundEffectVolume(soundVolume);
+                    client.playSoundEffect(nativeSoundIDReplacements.get(idx), soundVolume);
+                    preferences.setSoundEffectVolume(originalVolume);
+                    return;
                 }
             }
         }
@@ -289,16 +301,26 @@ public class SoundSwapperPlugin extends Plugin
     {
         int soundId = event.getSoundId();
 
-        if (config.simpleIdSwaps()) {
-            if (simpleIdsToSwap.contains(soundId))
+        if (config.nativeSoundIDSwapEnable()) {
+            if (nativeSoundIDsToSwap.contains(soundId))
             {
-                int idx = simpleIdsToSwap.indexOf(soundId);
+                int idx = nativeSoundIDsToSwap.indexOf(soundId);
+                Preferences preferences = client.getPreferences();
+                int originalVolume = preferences.getAreaSoundEffectVolume();
+                int soundVolume =  originalVolume;
 
-                if (idx < simpleIdReplacements.size())
+                if (config.enableCustomSoundsVolume())
+                {
+                    soundVolume = config.customSoundsVolume() * SoundEffectVolume.HIGH / 100;
+                }
+
+                if (idx < nativeSoundIDReplacements.size())
                 {
                     event.consume();
-                    soundId = -1;
-                    client.playSoundEffect(simpleIdReplacements.get(idx));
+                    preferences.setAreaSoundEffectVolume(soundVolume);
+                    client.playSoundEffect(nativeSoundIDReplacements.get(idx), soundVolume);
+                    preferences.setAreaSoundEffectVolume(originalVolume);
+                    return;
                 }
             }
         }
@@ -447,6 +469,8 @@ public class SoundSwapperPlugin extends Plugin
         whitelistedAreaSounds = new ArrayList<>();
         blacklistedSounds = new ArrayList<>();
         blacklistedAreaSounds = new ArrayList<>();
+        nativeSoundIDsToSwap = new ArrayList<>();
+        nativeSoundIDReplacements = new ArrayList<>();
         soundEffectOverlay.resetLines();
     }
 }
