@@ -29,6 +29,8 @@ import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
+import net.runelite.api.Preferences;
+import net.runelite.api.SoundEffectVolume;
 import net.runelite.api.events.AreaSoundEffectPlayed;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.SoundEffectPlayed;
@@ -85,6 +87,8 @@ public class SoundSwapperPlugin extends Plugin
     public List<Integer> whitelistedAreaSounds = new ArrayList<>();
     public List<Integer> blacklistedSounds = new ArrayList<>();
     public List<Integer> blacklistedAreaSounds = new ArrayList<>();
+    public List<Integer> nativeSoundIDsToSwap = new ArrayList<>();
+    public List<Integer> nativeSoundIDReplacements = new ArrayList<>();
 
     private static final File SOUND_DIR = new File(RuneLite.RUNELITE_DIR, "SoundSwapper");
 
@@ -182,6 +186,16 @@ public class SoundSwapperPlugin extends Plugin
                 });
                 break;
             }
+
+            case "nativeSoundIDsToReplace": {
+                nativeSoundIDsToSwap = getIds( event.getNewValue() );
+                break;
+            }
+
+            case "nativeSoundIDReplacements": {
+                nativeSoundIDReplacements = getIds( event.getNewValue() );
+                break;
+            }
         }
 
         soundEffectOverlay.resetLines();
@@ -218,12 +232,46 @@ public class SoundSwapperPlugin extends Plugin
         {
             blacklistedAreaSounds = getIds(config.blacklistedAreaSounds());
         }
+
+        if (!config.nativeSoundIDsToReplace().isEmpty())
+        {
+            nativeSoundIDsToSwap = getIds(config.nativeSoundIDsToReplace());
+        }
+
+        if (!config.nativeSoundIDReplacements().isEmpty())
+        {
+            nativeSoundIDReplacements = getIds(config.nativeSoundIDReplacements());
+        }
     }
 
     @Subscribe
     public void onSoundEffectPlayed(SoundEffectPlayed event)
     {
         int soundId = event.getSoundId();
+
+        if (config.nativeSoundIDSwapEnable()) {
+            if (nativeSoundIDsToSwap.contains(soundId))
+            {
+                int idx = nativeSoundIDsToSwap.indexOf(soundId);
+                Preferences preferences = client.getPreferences();
+                int originalVolume = preferences.getSoundEffectVolume();
+                int soundVolume =  originalVolume;
+
+                if (config.enableCustomSoundsVolume())
+                {
+                    soundVolume = config.customSoundsVolume() * SoundEffectVolume.HIGH / 100;
+                }
+
+                if (idx < nativeSoundIDReplacements.size())
+                {
+                    event.consume();
+                    preferences.setSoundEffectVolume(soundVolume);
+                    client.playSoundEffect(nativeSoundIDReplacements.get(idx), soundVolume);
+                    preferences.setSoundEffectVolume(originalVolume);
+                    return;
+                }
+            }
+        }
 
         if (config.soundEffects())
         {
@@ -252,6 +300,30 @@ public class SoundSwapperPlugin extends Plugin
     public void onAreaSoundEffectPlayed(AreaSoundEffectPlayed event)
     {
         int soundId = event.getSoundId();
+
+        if (config.nativeSoundIDSwapEnable()) {
+            if (nativeSoundIDsToSwap.contains(soundId))
+            {
+                int idx = nativeSoundIDsToSwap.indexOf(soundId);
+                Preferences preferences = client.getPreferences();
+                int originalVolume = preferences.getAreaSoundEffectVolume();
+                int soundVolume =  originalVolume;
+
+                if (config.enableCustomSoundsVolume())
+                {
+                    soundVolume = config.customSoundsVolume() * SoundEffectVolume.HIGH / 100;
+                }
+
+                if (idx < nativeSoundIDReplacements.size())
+                {
+                    event.consume();
+                    preferences.setAreaSoundEffectVolume(soundVolume);
+                    client.playSoundEffect(nativeSoundIDReplacements.get(idx), soundVolume);
+                    preferences.setAreaSoundEffectVolume(originalVolume);
+                    return;
+                }
+            }
+        }
 
         if (config.areaSoundEffects())
         {
@@ -397,6 +469,8 @@ public class SoundSwapperPlugin extends Plugin
         whitelistedAreaSounds = new ArrayList<>();
         blacklistedSounds = new ArrayList<>();
         blacklistedAreaSounds = new ArrayList<>();
+        nativeSoundIDsToSwap = new ArrayList<>();
+        nativeSoundIDReplacements = new ArrayList<>();
         soundEffectOverlay.resetLines();
     }
 }

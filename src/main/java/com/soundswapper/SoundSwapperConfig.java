@@ -47,6 +47,12 @@ public interface SoundSwapperConfig extends Config
     )
     String AREA_SOUND_EFFECTS_SECTION = "areaSoundEffects";
 
+    @ConfigSection(
+            name = "Native Sound ID Swaps",
+            description = "Configuration Settings for Simple Sound ID Substitutions",
+            position = 3
+    )
+    String SIMPLE_ID_SWAPS_SECTION = "nativeSoundIdSwaps";
     /**
      * Config Items
      */
@@ -228,4 +234,35 @@ public interface SoundSwapperConfig extends Config
             position = 98
     )
     default boolean debugSoundEffects() { return false; }
+    @ConfigItem(
+            keyName = "nativeSoundIDSwapEnable",
+            name = "Enable Native ID Swaps",
+            description = "Enables direct replacements of native Sound IDs with another native Sound ID",
+            position = 1,
+            section = SIMPLE_ID_SWAPS_SECTION
+    )
+    default boolean nativeSoundIDSwapEnable() { return false; }
+
+    @ConfigItem(
+            keyName = "nativeSoundIDsToReplace",
+            name = "IDs to Replace",
+            description = "Sound IDs to replace with replacement IDs. Comma separated vals. Ex: 2508,1321,1316",
+            position = 2,
+            section = SIMPLE_ID_SWAPS_SECTION
+    )
+    default String nativeSoundIDsToReplace()
+    {
+        return "";
+    }
+    @ConfigItem(
+            keyName = "nativeSoundIDReplacements",
+            name = "Replacement IDs",
+            description = "Sound IDs to replace the items in IDs to replace",
+            position = 3,
+            section = SIMPLE_ID_SWAPS_SECTION
+    )
+    default String nativeSoundIDReplacements()
+    {
+        return "";
+    }
 }
