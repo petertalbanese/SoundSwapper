@@ -247,6 +247,11 @@ public class SoundSwapperPlugin extends Plugin
     @Subscribe
     public void onSoundEffectPlayed(SoundEffectPlayed event)
     {
+        if (BlockedRegions.inBlockedRegion(client))
+        {
+            return;
+        }
+
         int soundId = event.getSoundId();
 
         if (config.nativeSoundIDSwapEnable()) {
@@ -299,6 +304,11 @@ public class SoundSwapperPlugin extends Plugin
     @Subscribe
     public void onAreaSoundEffectPlayed(AreaSoundEffectPlayed event)
     {
+        if (BlockedRegions.inBlockedRegion(client))
+        {
+            return;
+        }
+
         int soundId = event.getSoundId();
 
         if (config.nativeSoundIDSwapEnable()) {
