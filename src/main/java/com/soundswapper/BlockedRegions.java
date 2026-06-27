@@ -66,7 +66,11 @@ public class BlockedRegions
 		// Nightmare
 		15515,
 		// Phantom Muspah
-		11330
+		11330,
+        // Corrupted Gauntlet
+        7768,
+        // The Gauntlet
+        7512
 	);
 
 	public static boolean inBlockedRegion(Client client)
