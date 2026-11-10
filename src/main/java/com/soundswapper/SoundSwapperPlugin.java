@@ -43,14 +43,15 @@ import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
-import net.runelite.client.util.Text;
 
 import javax.inject.Inject;
 import javax.sound.sampled.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @PluginDescriptor(
@@ -87,10 +88,10 @@ public class SoundSwapperPlugin extends Plugin
 
     public HashMap<Integer, Sound> customAreaSounds = new HashMap<>();
 
-    public List<Integer> whitelistedSounds = new ArrayList<>();
-    public List<Integer> whitelistedAreaSounds = new ArrayList<>();
-    public List<Integer> blacklistedSounds = new ArrayList<>();
-    public List<Integer> blacklistedAreaSounds = new ArrayList<>();
+    public Set<Integer> whitelistedSounds = new HashSet<>();
+    public Set<Integer> whitelistedAreaSounds = new HashSet<>();
+    public Set<Integer> blacklistedSounds = new HashSet<>();
+    public Set<Integer> blacklistedAreaSounds = new HashSet<>();
     public List<Integer> nativeSoundIDsToSwap = new ArrayList<>();
     public List<Integer> nativeSoundIDReplacements = new ArrayList<>();
 
@@ -173,25 +174,25 @@ public class SoundSwapperPlugin extends Plugin
 
             case "whitelistSounds":
             {
-                whitelistedSounds = getIds(event.getNewValue());
+                whitelistedSounds = getIdSet(event.getNewValue());
                 break;
             }
 
             case "whitelistAreaSounds":
             {
-                whitelistedAreaSounds = getIds(event.getNewValue());
+                whitelistedAreaSounds = getIdSet(event.getNewValue());
                 break;
             }
 
             case "blacklistedSounds":
             {
-                blacklistedSounds = getIds(event.getNewValue());
+                blacklistedSounds = getIdSet(event.getNewValue());
                 break;
             }
 
             case "blacklistedAreaSounds":
             {
-                blacklistedAreaSounds = getIds(event.getNewValue());
+                blacklistedAreaSounds = getIdSet(event.getNewValue());
                 break;
             }
 
@@ -238,22 +239,22 @@ public class SoundSwapperPlugin extends Plugin
 
         if (!config.whitelistSounds().isEmpty())
         {
-            whitelistedSounds = getIds(config.whitelistSounds());
+            whitelistedSounds = getIdSet(config.whitelistSounds());
         }
 
         if (!config.whitelistAreaSounds().isEmpty())
         {
-            whitelistedAreaSounds = getIds(config.whitelistAreaSounds());
+            whitelistedAreaSounds = getIdSet(config.whitelistAreaSounds());
         }
 
         if (!config.blacklistedSounds().isEmpty())
         {
-            blacklistedSounds = getIds(config.blacklistedSounds());
+            blacklistedSounds = getIdSet(config.blacklistedSounds());
         }
 
         if (!config.blacklistedAreaSounds().isEmpty())
         {
-            blacklistedAreaSounds = getIds(config.blacklistedAreaSounds());
+            blacklistedAreaSounds = getIdSet(config.blacklistedAreaSounds());
         }
 
         if (!config.nativeSoundIDsToReplace().isEmpty())
@@ -469,7 +470,7 @@ public class SoundSwapperPlugin extends Plugin
         sounds.clear();
         failureMessages.clear();
 
-        for (String s : Text.fromCSV(configText))
+        for (String s : SoundListParser.parse(configText))
         {
             try
             {
@@ -486,6 +487,11 @@ public class SoundSwapperPlugin extends Plugin
         queueFailureMessages();
     }
 
+    private Set<Integer> getIdSet(String configText)
+    {
+        return new HashSet<>(getIds(configText));
+    }
+
     private List<Integer> getIds(String configText)
     {
         if (configText == null || configText.isEmpty())
@@ -495,7 +501,7 @@ public class SoundSwapperPlugin extends Plugin
 
         boolean shouldNotify = false;
         List<Integer> ids = new ArrayList<>();
-        for (String s : Text.fromCSV(configText))
+        for (String s : SoundListParser.parse(configText))
         {
             try
             {
@@ -549,10 +555,10 @@ public class SoundSwapperPlugin extends Plugin
     {
         customSounds = new HashMap<>();
         customAreaSounds = new HashMap<>();
-        whitelistedSounds = new ArrayList<>();
-        whitelistedAreaSounds = new ArrayList<>();
-        blacklistedSounds = new ArrayList<>();
-        blacklistedAreaSounds = new ArrayList<>();
+        whitelistedSounds = new HashSet<>();
+        whitelistedAreaSounds = new HashSet<>();
+        blacklistedSounds = new HashSet<>();
+        blacklistedAreaSounds = new HashSet<>();
         nativeSoundIDsToSwap = new ArrayList<>();
         nativeSoundIDReplacements = new ArrayList<>();
         failureMessages = new HashMap<>();

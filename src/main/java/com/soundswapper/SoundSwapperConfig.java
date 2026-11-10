@@ -53,6 +53,9 @@ public interface SoundSwapperConfig extends Config
             position = 3
     )
     String SIMPLE_ID_SWAPS_SECTION = "nativeSoundIdSwaps";
+
+    String LIST_SYNTAX_HELP = "Blank lines are ignored. Comments: // and # ignore the rest of the line, /* ... */ ignores the enclosed text.";
+
     /**
      * Config Items
      */
@@ -68,7 +71,8 @@ public interface SoundSwapperConfig extends Config
     @ConfigItem(
             keyName = "customSounds",
             name = "Custom Sounds",
-            description = "Area Sounds to replace with your own custom .wav files. Separate with comma.<br>" +
+            description = "Area Sounds to replace with your own custom .wav files. Separate with commas or new lines.<br>" +
+                    LIST_SYNTAX_HELP + "<br>" +
                     "Sound List: https://oldschool.runescape.wiki/w/List_of_in-game_sound_IDs",
             position = 2,
             section = SOUND_EFFECTS_SECTION
@@ -91,7 +95,8 @@ public interface SoundSwapperConfig extends Config
             keyName = "whitelistSounds",
             name = "Whitelist Sounds",
             description = "Sound ids allowed to bypass the 'Consume Sound Effects' config option<br>" +
-                    "Format: 123,456,789",
+                    "Format: 123,456,789<br>" +
+                    LIST_SYNTAX_HELP,
             position = 4,
             section = SOUND_EFFECTS_SECTION
     )
@@ -104,7 +109,8 @@ public interface SoundSwapperConfig extends Config
             keyName = "blacklistedSounds",
             name = "Blacklist Sounds",
             description = "Sound ids consumed regardless of the 'Consume Sound Effects' config option being enabled<br>" +
-                    "Format: 123,456,789",
+                    "Format: 123,456,789<br>" +
+                    LIST_SYNTAX_HELP,
             position = 5,
             section = SOUND_EFFECTS_SECTION
     )
@@ -147,7 +153,8 @@ public interface SoundSwapperConfig extends Config
     @ConfigItem(
             keyName = "customAreaSounds",
             name = "Custom Area Sounds",
-            description = "Area Sounds to replace with your own custom .wav files. Separate with comma.<br>" +
+            description = "Area Sounds to replace with your own custom .wav files. Separate with commas or new lines.<br>" +
+                    LIST_SYNTAX_HELP + "<br>" +
                     "Sound List: https://oldschool.runescape.wiki/w/List_of_in-game_sound_IDs",
             position = 2,
             section = AREA_SOUND_EFFECTS_SECTION
@@ -171,7 +178,8 @@ public interface SoundSwapperConfig extends Config
             keyName = "whitelistAreaSounds",
             name = "Whitelist Area Sounds",
             description = "Sound ids allowed to bypass the 'Consume Area Sound Effects' config option<br>" +
-                    "Format: 123,456,789",
+                    "Format: 123,456,789<br>" +
+                    LIST_SYNTAX_HELP,
             position = 4,
             section = AREA_SOUND_EFFECTS_SECTION
     )
@@ -184,7 +192,8 @@ public interface SoundSwapperConfig extends Config
             keyName = "blacklistedAreaSounds",
             name = "Blacklist Area Sounds",
             description = "Sound ids consumed regardless of the 'Consume Area Sound Effects' config option being enabled<br>" +
-                    "Format: 123,456,789",
+                    "Format: 123,456,789<br>" +
+                    LIST_SYNTAX_HELP,
             position = 5,
             section = AREA_SOUND_EFFECTS_SECTION
     )
@@ -236,7 +245,8 @@ public interface SoundSwapperConfig extends Config
     @ConfigItem(
             keyName = "nativeSoundIDsToReplace",
             name = "IDs to Replace",
-            description = "Sound IDs to replace with replacement IDs. Comma separated vals. Ex: 2508,1321,1316",
+            description = "Sound IDs to replace with replacement IDs. Separate with commas or new lines. Ex: 2508,1321,1316<br>" +
+                    LIST_SYNTAX_HELP,
             position = 2,
             section = SIMPLE_ID_SWAPS_SECTION
     )
@@ -247,7 +257,8 @@ public interface SoundSwapperConfig extends Config
     @ConfigItem(
             keyName = "nativeSoundIDReplacements",
             name = "Replacement IDs",
-            description = "Sound IDs to replace the items in IDs to replace",
+            description = "Sound IDs to replace the items in IDs to replace, in the same order<br>" +
+                    LIST_SYNTAX_HELP,
             position = 3,
             section = SIMPLE_ID_SWAPS_SECTION
     )

@@ -22,3 +22,15 @@ In order to add more entries, create a comma separated list of values in the 'ID
 An example configuration of multiple native sound ID swaps:
 IDs to Replace: 2508,1234,1111
 Replacement IDs: 3892,1051,3892
+
+# List Syntax
+All sound ID list fields accept values separated by commas and/or new lines. Blank lines are ignored, and comments are supported:
+- `//` and `#` ignore everything after them on that line
+- `/* ... */` ignores the enclosed text (within a single line)
+
+For example:
+```
+// Combat sounds
+2508, 1321 # hits
+/* Prayer */ 2690
+```
